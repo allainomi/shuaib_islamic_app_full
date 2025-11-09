@@ -1,47 +1,48 @@
-name: Validate Project
+name: Diagnose Build
 
 on:
-  push:
-    branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
-  validate:
+  diagnose:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
-    - name: Analyze Project
+      
+    - name: Complete project analysis
       run: |
-        echo "🔍 Project Analysis Report"
-        echo "=========================="
-        
-        # Check critical files
-        echo ""
-        echo "📋 Critical Files Check:"
-        [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] && echo "✅ Root build.gradle found" || echo "❌ Root build.gradle missing"
-        [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ] && echo "✅ settings.gradle found" || echo "❌ settings.gradle missing"
-        [ -d "app" ] && echo "✅ app directory found" || echo "❌ app directory missing"
-        [ -f "app/build.gradle" ] || [ -f "app/build.gradle.kts" ] && echo "✅ app/build.gradle found" || echo "❌ app/build.gradle missing"
+        echo "🔍 COMPREHENSIVE PROJECT ANALYSIS"
+        echo "=================================="
         
         echo ""
-        echo "📁 Complete File Structure:"
-        find . -type f -name "*.gradle*" -o -name "*.java" -o -name "*.kt" -o -name "AndroidManifest.xml" | sort
+        echo "1. ROOT DIRECTORY:"
+        ls -la
         
         echo ""
-        echo "📊 Statistics:"
-        echo "Java files: $(find . -name "*.java" | wc -l)"
-        echo "Kotlin files: $(find . -name "*.kt" | wc -l)"
-        echo "XML files: $(find . -name "*.xml" | wc -l)"
+        echo "2. APP DIRECTORY:"
+        ls -la app/ || echo "MISSING: app directory"
         
-    - name: Basic Gradle Check
-      run: |
-        echo "🛠️ Testing Gradle..."
+        echo ""
+        echo "3. GRADLE FILES:"
+        find . -name "*.gradle*" -type f
+        
+        echo ""
+        echo "4. ANDROID MANIFEST:"
+        find . -name "AndroidManifest.xml" -type f
+        
+        echo ""
+        echo "5. SOURCE CODE FILES:"
+        echo "Java: $(find . -name '*.java' | wc -l) files"
+        echo "Kotlin: $(find . -name '*.kt' | wc -l) files"
+        echo "XML: $(find . -name '*.xml' | wc -l) files"
+        
+        echo ""
+        echo "6. BUILD ATTEMPT:"
         if [ -f "gradlew" ]; then
           chmod +x gradlew
-          ./gradlew tasks --all || echo "Gradle tasks failed but continuing..."
+          ./gradlew tasks --all | grep "assemble" | head -10 || echo "Gradle tasks failed"
         else
-          echo "No gradlew found, using system gradle"
-          gradle tasks --all || echo "System gradle not available"
+          echo "NO GRADLEW FOUND - Cannot build"
         fi
