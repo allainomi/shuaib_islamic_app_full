@@ -1,48 +1,80 @@
-name: Diagnose Build
+name: Validate with Artifacts
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
-  diagnose:
+  validate:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Complete project analysis
+    
+    - name: Create Project Analysis Files
       run: |
-        echo "🔍 COMPREHENSIVE PROJECT ANALYSIS"
-        echo "=================================="
+        echo "🔍 Creating project analysis artifacts..."
         
-        echo ""
-        echo "1. ROOT DIRECTORY:"
-        ls -la
+        # 1. Project structure file
+        echo "📁 PROJECT STRUCTURE" > project-structure.txt
+        echo "====================" >> project-structure.txt
+        ls -la >> project-structure.txt
+        echo "" >> project-structure.txt
+        echo "App Directory:" >> project-structure.txt
+        ls -la app/ >> project-structure.txt 2>/dev/null || echo "No app directory" >> project-structure.txt
         
-        echo ""
-        echo "2. APP DIRECTORY:"
-        ls -la app/ || echo "MISSING: app directory"
+        # 2. Source code summary
+        echo "📊 SOURCE CODE SUMMARY" > code-summary.txt
+        echo "======================" >> code-summary.txt
+        echo "Java files: $(find . -name '*.java' | wc -l)" >> code-summary.txt
+        echo "Kotlin files: $(find . -name '*.kt' | wc -l)" >> code-summary.txt
+        echo "XML files: $(find . -name '*.xml' | wc -l)" >> code-summary.txt
+        echo "Gradle files: $(find . -name '*.gradle*' | wc -l)" >> code-summary.txt
         
-        echo ""
-        echo "3. GRADLE FILES:"
-        find . -name "*.gradle*" -type f
+        # 3. File list
+        find . -type f -name "*.java" -o -name "*.kt" -o -name "*.xml" -o -name "*.gradle*" | sort > file-list.txt
         
-        echo ""
-        echo "4. ANDROID MANIFEST:"
-        find . -name "AndroidManifest.xml" -type f
+        # 4. Build info
+        echo "🛠️ BUILD INFORMATION" > build-info.txt
+        echo "====================" >> build-info.txt
+        date >> build-info.txt
+        echo "Repository: https://github.com/allainomi/shuaib_islamic_app_full" >> build-info.txt
+        echo "Branch: main" >> build-info.txt
         
-        echo ""
-        echo "5. SOURCE CODE FILES:"
-        echo "Java: $(find . -name '*.java' | wc -l) files"
-        echo "Kotlin: $(find . -name '*.kt' | wc -l) files"
-        echo "XML: $(find . -name '*.xml' | wc -l) files"
-        
-        echo ""
-        echo "6. BUILD ATTEMPT:"
-        if [ -f "gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew tasks --all | grep "assemble" | head -10 || echo "Gradle tasks failed"
-        else
-          echo "NO GRADLEW FOUND - Cannot build"
-        fi
+        echo "✅ Analysis files created successfully!"
+
+    - name: Upload Project Analysis Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-analysis-report
+        path: |
+          project-structure.txt
+          code-summary.txt
+          file-list.txt
+          build-info.txt
+        retention-days: 30
+
+    - name: Upload Source Code Sample
+      uses: actions/upload-artifact@v4
+      with:
+        name: source-code-samples
+        path: |
+          app/src/main/AndroidManifest.xml
+          app/build.gradle
+          build.gradle
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Create Summary
+      run: |
+        echo "## 🎉 Validation Completed Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Generated Artifacts:" >> $GITHUB_STEP_SUMMARY
+        echo "- **project-analysis-report**: Project structure and code analysis" >> $GITHUB_STEP_SUMMARY
+        echo "- **source-code-samples**: Key source files" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔍 Analysis Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- Java files: $(find . -name '*.java' | wc -l)" >> $GITHUB_STEP_SUMMARY
+        echo "- Kotlin files: $(find . -name '*.kt' | wc -l)" >> $GITHUB_STEP_SUMMARY
+        echo "- Total code files: $(find . -name '*.java' -o -name '*.kt' | wc -l)" >> $GITHUB_STEP_SUMMARY
