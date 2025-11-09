@@ -5,7 +5,44 @@ on:
     branches: [ main ]
 
 jobs:
-  validate:
+  valid# براہ راست کمانڈ سے فائل بنائیں
+cat > .github/workflows/flutter-ci.yml << 'EOF'
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+
+    - name: Show Project Structure
+      run: |
+        echo "📁 Project Contents:"
+        ls -la
+        echo ""
+        echo "📱 Dart Files:"
+        find . -name "*.dart" | head -10
+
+    - name: Upload Project Structure
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-structure
+        path: .
+        retention-days: 5
+EOFate:
     runs-on: ubuntu-latest
     
     steps:name: Flutter CI
