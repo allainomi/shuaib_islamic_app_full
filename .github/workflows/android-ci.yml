@@ -1,59 +1,44 @@
-name: Generate Artifacts
+name: Real Artifacts Check
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  create-artifacts:
+  check:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Create Simple Artifacts
+    - name: Real Project Analysis
       run: |
-        # 1. Basic project info
-        echo "🔄 PROJECT ANALYSIS" > project-info.txt
-        echo "==================" >> project-info.txt
-        echo "Analysis time: $(date)" >> project-info.txt
-        echo "Repository: shuaib_islamic_app_full" >> project-info.txt
-        echo "Branch: main" >> project-info.txt
+        echo "🔍 REAL PROJECT ANALYSIS" > analysis.txt
+        echo "========================" >> analysis.txt
         
-        # 2. File structure
-        echo "" >> project-info.txt
-        echo "📁 FILE STRUCTURE" >> project-info.txt
-        echo "================" >> project-info.txt
-        ls -la >> project-info.txt
+        echo "" >> analysis.txt
+        echo "📊 FILE COUNTS:" >> analysis.txt
+        echo "Total files: $(find . -type f | wc -l)" >> analysis.txt
+        echo "Dart files: $(find . -name '*.dart' | wc -l)" >> analysis.txt
+        echo "Java/Kotlin files: $(find . -name '*.java' -o -name '*.kt' | wc -l)" >> analysis.txt
+        echo "XML files: $(find . -name '*.xml' | wc -l)" >> analysis.txt
         
-        # 3. File counts
-        echo "" >> project-info.txt
-        echo "📊 FILE COUNTS" >> project-info.txt
-        echo "==============" >> project-info.txt
-        echo "Total files: $(find . -type f | wc -l)" >> project-info.txt
-        echo "Dart files: $(find . -name "*.dart" | wc -l)" >> project-info.txt
-        echo "XML files: $(find . -name "*.xml" | wc -l)" >> project-info.txt
-        echo "YAML files: $(find . -name "*.yaml" -o -name "*.yml" | wc -l)" >> project-info.txt
+        echo "" >> analysis.txt
+        echo "📁 PROJECT SIZE:" >> analysis.txt
+        du -sh . >> analysis.txt
         
-        # 4. Create a test file
-        echo "This is a test artifact file" > test-file.txt
-        echo "Created at: $(date)" >> test-file.txt
+        echo "" >> analysis.txt
+        echo "📋 DART FILES LIST:" >> analysis.txt
+        find . -name "*.dart" -type f >> analysis.txt 2>/dev/null || echo "No Dart files found" >> analysis.txt
         
-        echo "✅ Artifacts created successfully!"
-        
-    - name: Upload Artifacts
+        echo "" >> analysis.txt
+        echo "📦 PUBSPEC.YAML:" >> analysis.txt
+        find . -name "pubspec.yaml" -type f >> analysis.txt 2>/dev/null || echo "No pubspec.yaml found" >> analysis.txt
+
+    - name: Upload Real Analysis
       uses: actions/upload-artifact@v4
       with:
-        name: my-artifacts
-        path: |
-          project-info.txt
-          test-file.txt
+        name: real-project-analysis
+        path: analysis.txt
         retention-days: 30
-        
-    - name: Upload Complete Project
-      uses: actions/upload-artifact@v4
-      with:
-        name: complete-project
-        path: .
-        retention-days: 5
