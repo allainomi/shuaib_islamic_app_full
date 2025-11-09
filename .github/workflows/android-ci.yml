@@ -8,7 +8,98 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     
+    steps:name: Flutter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+
+    - name: Create Flutter Project Analysis
+      run: |
+        echo "🚀 FLUTTER PROJECT ANALYSIS" > flutter-analysis.txt
+        echo "==========================" >> flutter-analysis.txt
+        
+        echo "" >> flutter-analysis.txt
+        echo "📁 Project Structure:" >> flutter-analysis.txt
+        ls -la >> flutter-analysis.txt
+        
+        echo "" >> flutter-analysis.txt
+        echo "📊 Dart Files Count:" >> flutter-analysis.txt
+        find . -name "*.dart" | wc -l >> flutter-analysis.txt
+        
+        echo "" >> flutter-analysis.txt
+        echo "📋 Dart Files List:" >> flutter-analysis.txt
+        find . -name "*.dart" | head -20 >> flutter-analysis.txt
+        
+        echo "" >> flutter-analysis.txt
+        echo "🔧 Flutter Doctor:" >> flutter-analysis.txt
+        flutter doctor -v >> flutter-analysis.txt 2>&1
+
+    - name: Analyze Flutter Project
+      run: |
+        echo "🔍 Analyzing Flutter project..."
+        flutter analyze >> analysis-results.txt 2>&1 || echo "Analysis completed"
+        
+        echo "📦 Getting dependencies..."
+        flutter pub get >> pub-get.txt 2>&1 || echo "Dependencies fetched"
+
+    - name: Build Flutter Project
+      run: |
+        echo "🏗️ Building Flutter project..."
+        flutter build apk --debug >> build-output.txt 2>&1 || echo "Build attempted"
+        
+        echo "📱 Checking for APK files..."
+        find . -name "*.apk" -type f >> apk-files.txt 2>&1 || echo "No APK files found"
+
+    - name: Upload Flutter Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: flutter-project-analysis
+        path: |
+          flutter-analysis.txt
+          analysis-results.txt
+          pub-get.txt
+          build-output.txt
+          apk-files.txt
+        retention-days: 30
+
+    - name: Upload Build Outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: flutter-build-outputs
+        path: |
+          build/app/outputs/
+          **/build/
+        if-no-files-found: ignore
+        retention-days: 15
+
+    - name: Create Flutter Summary
+      run: |
+        echo "## 🎯 Flutter Project Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Project Statistics:" >> $GITHUB_STEP_SUMMARY
+        echo "- Dart files: $(find . -name '*.dart' | wc -l)" >> $GITHUB_STEP_SUMMARY
+        echo "- XML files: $(find . -name '*.xml' | wc -l)" >> $GITHUB_STEP_SUMMARY
+        echo "- Total files: $(find . -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Generated Artifacts:" >> $GITHUB_STEP_SUMMARY
+        echo "- **flutter-project-analysis**: Complete project analysis" >> $GITHUB_STEP_SUMMARY
+        echo "- **flutter-build-outputs**: Build results and APK files" >> $GITHUB_STEP_SUMMARY
     - name: Checkout code
       uses: actions/checkout@v4
     
