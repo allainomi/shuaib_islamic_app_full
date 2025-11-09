@@ -1,92 +1,59 @@
-name: Flutter CI
+name: Generate Artifacts
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build:
+  create-artifacts:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.16.0'
-
-    - name: Create Flutter Project Analysis
+      
+    - name: Create Simple Artifacts
       run: |
-        echo "🚀 FLUTTER PROJECT ANALYSIS" > flutter-analysis.txt
-        echo "==========================" >> flutter-analysis.txt
+        # 1. Basic project info
+        echo "🔄 PROJECT ANALYSIS" > project-info.txt
+        echo "==================" >> project-info.txt
+        echo "Analysis time: $(date)" >> project-info.txt
+        echo "Repository: shuaib_islamic_app_full" >> project-info.txt
+        echo "Branch: main" >> project-info.txt
         
-        echo "" >> flutter-analysis.txt
-        echo "📁 Project Structure:" >> flutter-analysis.txt
-        ls -la >> flutter-analysis.txt
+        # 2. File structure
+        echo "" >> project-info.txt
+        echo "📁 FILE STRUCTURE" >> project-info.txt
+        echo "================" >> project-info.txt
+        ls -la >> project-info.txt
         
-        echo "" >> flutter-analysis.txt
-        echo "📊 Dart Files Count:" >> flutter-analysis.txt
-        find . -name "*.dart" | wc -l >> flutter-analysis.txt
+        # 3. File counts
+        echo "" >> project-info.txt
+        echo "📊 FILE COUNTS" >> project-info.txt
+        echo "==============" >> project-info.txt
+        echo "Total files: $(find . -type f | wc -l)" >> project-info.txt
+        echo "Dart files: $(find . -name "*.dart" | wc -l)" >> project-info.txt
+        echo "XML files: $(find . -name "*.xml" | wc -l)" >> project-info.txt
+        echo "YAML files: $(find . -name "*.yaml" -o -name "*.yml" | wc -l)" >> project-info.txt
         
-        echo "" >> flutter-analysis.txt
-        echo "📋 Dart Files List:" >> flutter-analysis.txt
-        find . -name "*.dart" | head -20 >> flutter-analysis.txt
+        # 4. Create a test file
+        echo "This is a test artifact file" > test-file.txt
+        echo "Created at: $(date)" >> test-file.txt
         
-        echo "" >> flutter-analysis.txt
-        echo "🔧 Flutter Doctor:" >> flutter-analysis.txt
-        flutter doctor -v >> flutter-analysis.txt 2>&1
-
-    - name: Analyze Flutter Project
-      run: |
-        echo "🔍 Analyzing Flutter project..."
-        flutter analyze >> analysis-results.txt 2>&1 || echo "Analysis completed"
+        echo "✅ Artifacts created successfully!"
         
-        echo "📦 Getting dependencies..."
-        flutter pub get >> pub-get.txt 2>&1 || echo "Dependencies fetched"
-
-    - name: Build Flutter Project
-      run: |
-        echo "🏗️ Building Flutter project..."
-        flutter build apk --debug >> build-output.txt 2>&1 || echo "Build attempted"
-        
-        echo "📱 Checking for APK files..."
-        find . -name "*.apk" -type f >> apk-files.txt 2>&1 || echo "No APK files found"
-
-    - name: Upload Flutter Artifacts
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: flutter-project-analysis
+        name: my-artifacts
         path: |
-          flutter-analysis.txt
-          analysis-results.txt
-          pub-get.txt
-          build-output.txt
-          apk-files.txt
+          project-info.txt
+          test-file.txt
         retention-days: 30
-
-    - name: Upload Build Outputs
+        
+    - name: Upload Complete Project
       uses: actions/upload-artifact@v4
       with:
-        name: flutter-build-outputs
-        path: |
-          build/app/outputs/
-          **/build/
-        if-no-files-found: ignore
-        retention-days: 15
-
-    - name: Create Flutter Summary
-      run: |
-        echo "## 🎯 Flutter Project Analysis" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📊 Project Statistics:" >> $GITHUB_STEP_SUMMARY
-        echo "- Dart files: $(find . -name '*.dart' | wc -l)" >> $GITHUB_STEP_SUMMARY
-        echo "- XML files: $(find . -name '*.xml' | wc -l)" >> $GITHUB_STEP_SUMMARY
-        echo "- Total files: $(find . -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📦 Generated Artifacts:" >> $GITHUB_STEP_SUMMARY
-        echo "- **flutter-project-analysis**: Complete project analysis" >> $GITHUB_STEP_SUMMARY
-        echo "- **flutter-build-outputs**: Build results and APK files" >> $GITHUB_STEP_SUMMARY
+        name: complete-project
+        path: .
+        retention-days: 5
